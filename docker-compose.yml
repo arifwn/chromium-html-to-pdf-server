@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  pdf-server:
+    build: .
+    ports:
+      - "8822:8822"
+    environment:
+      - API_KEY=your-secret-api-key-here
+      - PORT=8822
+      - LOG_LEVEL=INFO
+    volumes:
+      - .:/app
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8822/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
