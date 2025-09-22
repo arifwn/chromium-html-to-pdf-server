@@ -1,6 +1,6 @@
 # Chromium HTML to PDF Server
 
-A high-performance web service that converts HTML content to PDF using a headless Chromium browser. Built with Python, FastAPI, and Playwright for reliable and scalable PDF generation.
+A web service that converts HTML content to PDF using a headless Chromium browser. Built with Python, FastAPI, and Playwright for reliable and scalable PDF generation.
 
 ## Features
 
@@ -78,6 +78,8 @@ The script will automatically:
    docker build -t pdf-server .
    docker run -p 8822:8822 -e API_KEY="your-secret-api-key" pdf-server
    ```
+
+Pre-built images are also available on Docker Hub: `arifwn/chromium-html-to-pdf-server`
 
 ## API Documentation
 
