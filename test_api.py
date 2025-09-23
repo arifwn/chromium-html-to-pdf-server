@@ -19,6 +19,10 @@ API_KEY = os.getenv("API_KEY", "your-secret-api-key-here")
 # Headers for authentication
 HEADERS = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
 
+# Ensure tmp directory exists
+TMP_DIR = "./tmp"
+os.makedirs(TMP_DIR, exist_ok=True)
+
 
 def test_health_check():
     """Test the health check endpoint."""
@@ -74,7 +78,7 @@ def test_simple_html_conversion():
 
         if response.status_code == 200:
             # Save PDF file
-            filename = f"test_simple_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+            filename = os.path.join(TMP_DIR, f"test_simple_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf")
             with open(filename, "wb") as f:
                 f.write(response.content)
             print(f"Simple HTML conversion successful - saved as {filename}")
@@ -217,7 +221,7 @@ def test_complex_html_conversion():
         response = requests.post(f"{BASE_URL}/convert", headers=HEADERS, json=payload)
 
         if response.status_code == 200:
-            filename = f"test_complex_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+            filename = os.path.join(TMP_DIR, f"test_complex_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf")
             with open(filename, "wb") as f:
                 f.write(response.content)
             print(f"Complex HTML conversion successful - saved as {filename}")
@@ -243,7 +247,7 @@ def test_url_conversion():
         response = requests.post(f"{BASE_URL}/convert-url", headers=HEADERS, params=payload)
 
         if response.status_code == 200:
-            filename = f"test_url_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+            filename = os.path.join(TMP_DIR, f"test_url_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf")
             with open(filename, "wb") as f:
                 f.write(response.content)
             print(f"URL conversion successful - saved as {filename}")
