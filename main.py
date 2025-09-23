@@ -1,3 +1,4 @@
+import io
 import logging
 import os
 from typing import Optional
@@ -7,6 +8,7 @@ from fastapi.responses import Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from playwright.async_api import async_playwright
 from pydantic import BaseModel, Field
+from pypdf import PdfReader, PdfWriter
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -25,6 +27,7 @@ API_KEY = os.getenv("API_KEY", "your-secret-api-key-here")
 class HTMLToPDFRequest(BaseModel):
     html: str = Field(..., description="HTML content to convert to PDF")
     options: Optional[dict] = Field(default_factory=dict, description="PDF generation options")
+    creator: Optional[str] = Field(None, description="PDF creator metadata field")
 
 
 # PDF options with defaults
@@ -34,6 +37,45 @@ DEFAULT_PDF_OPTIONS = {
     "print_background": True,
     "prefer_css_page_size": False,
 }
+
+
+def update_pdf_metadata(pdf_bytes: bytes, creator: Optional[str] = None) -> bytes:
+    """Update PDF metadata with custom creator field."""
+    if not creator:
+        return pdf_bytes
+
+    try:
+        # Read the PDF from bytes
+        pdf_input = io.BytesIO(pdf_bytes)
+        reader = PdfReader(pdf_input)
+        writer = PdfWriter()
+
+        # Copy all pages
+        for page in reader.pages:
+            writer.add_page(page)
+
+        # Update metadata
+        metadata = reader.metadata or {}
+        writer.add_metadata(
+            {
+                "/Title": metadata.get("/Title", ""),
+                "/Author": metadata.get("/Author", ""),
+                "/Subject": metadata.get("/Subject", ""),
+                "/Creator": creator,
+                "/Producer": metadata.get("/Producer", ""),
+                "/Keywords": metadata.get("/Keywords", ""),
+            }
+        )
+
+        # Write to bytes
+        output_stream = io.BytesIO()
+        writer.write(output_stream)
+        output_stream.seek(0)
+        return output_stream.read()
+
+    except Exception as e:
+        logger.warning(f"Failed to update PDF metadata: {e}")
+        return pdf_bytes
 
 
 async def verify_api_key(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -115,6 +157,10 @@ async def convert_html_to_pdf(request: HTMLToPDFRequest, api_key: str = Depends(
                 # Generate PDF
                 pdf_bytes = await page.pdf(**pdf_options)
 
+                # Update PDF metadata if creator is specified
+                if request.creator:
+                    pdf_bytes = update_pdf_metadata(pdf_bytes, request.creator)
+
                 logger.info("PDF conversion completed successfully")
 
                 return Response(
@@ -132,13 +178,14 @@ async def convert_html_to_pdf(request: HTMLToPDFRequest, api_key: str = Depends(
 
 
 @app.post("/convert-url", response_class=Response)
-async def convert_url_to_pdf(url: str, options: Optional[dict] = None, api_key: str = Depends(verify_api_key)):
+async def convert_url_to_pdf(url: str, options: Optional[dict] = None, creator: Optional[str] = None, api_key: str = Depends(verify_api_key)):
     """
     Convert a web page URL to PDF.
 
     Args:
         url: URL of the web page to convert
         options: PDF generation options
+        creator: PDF creator metadata field
         api_key: API key for authentication
 
     Returns:
@@ -171,6 +218,10 @@ async def convert_url_to_pdf(url: str, options: Optional[dict] = None, api_key: 
 
                 # Generate PDF
                 pdf_bytes = await page.pdf(**pdf_options)
+
+                # Update PDF metadata if creator is specified
+                if creator:
+                    pdf_bytes = update_pdf_metadata(pdf_bytes, creator)
 
                 logger.info("URL to PDF conversion completed successfully")
 

@@ -129,7 +129,8 @@ Authorization: Bearer your-api-key
       "left": "1cm"
     },
     "print_background": true
-  }
+  },
+  "creator": "My Application v1.0"
 }
 ```
 
@@ -144,6 +145,7 @@ Authorization: Bearer your-api-key
 **Parameters:**
 - `url` (string): URL to convert
 - `options` (object, optional): PDF generation options
+- `creator` (string, optional): PDF creator metadata field
 
 **Response:** PDF file (application/pdf)
 
@@ -156,6 +158,12 @@ Authorization: Bearer your-api-key
 | `print_background` | boolean | `true` | Include background graphics |
 | `prefer_css_page_size` | boolean | `false` | Use CSS page size |
 
+### PDF Metadata Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `creator` | string | None | Sets the Creator field in PDF metadata (applied after PDF generation) |
+
 ## Usage Examples
 
 ### cURL Examples
@@ -167,7 +175,8 @@ curl -X POST "http://localhost:8822/convert" \
   -H "Content-Type: application/json" \
   -d '{
     "html": "<html><body><h1>Hello PDF!</h1></body></html>",
-    "options": {"format": "A4"}
+    "options": {"format": "A4"},
+    "creator": "My PDF Generator v1.0"
   }' \
   --output document.pdf
 ```
@@ -178,6 +187,7 @@ curl -X POST "http://localhost:8822/convert-url" \
   -H "Authorization: Bearer your-secret-api-key" \
   -d "url=https://example.com" \
   -d "options={\"format\":\"A4\"}" \
+  -d "creator=Website Archiver v2.0" \
   --output webpage.pdf
 ```
 
@@ -199,6 +209,7 @@ html = "<html><body><h1>Hello World</h1></body></html>"
 pdf_bytes = client.convert_html_to_pdf(
     html=html,
     options={"format": "A4"},
+    creator="My Python App v1.0",
     output_file="output.pdf"
 )
 
@@ -206,6 +217,7 @@ pdf_bytes = client.convert_html_to_pdf(
 pdf_bytes = client.convert_url_to_pdf(
     url="https://example.com",
     options={"format": "A4"},
+    creator="Web Archiver v1.0",
     output_file="webpage.pdf"
 )
 ```
@@ -216,12 +228,12 @@ pdf_bytes = client.convert_url_to_pdf(
 const axios = require('axios');
 const fs = require('fs');
 
-const convertHtmlToPdf = async (html, options = {}) => {
+const convertHtmlToPdf = async (html, options = {}, creator = null) => {
   try {
-    const response = await axios.post('http://localhost:8822/convert', {
-      html: html,
-      options: options
-    }, {
+    const payload = { html: html, options: options };
+    if (creator) payload.creator = creator;
+    
+    const response = await axios.post('http://localhost:8822/convert', payload, {
       headers: {
         'Authorization': 'Bearer your-secret-api-key',
         'Content-Type': 'application/json'
@@ -238,7 +250,7 @@ const convertHtmlToPdf = async (html, options = {}) => {
 
 // Usage
 const html = '<html><body><h1>Hello from Node.js!</h1></body></html>';
-convertHtmlToPdf(html, { format: 'A4' });
+convertHtmlToPdf(html, { format: 'A4' }, 'Node.js PDF Generator v1.0');
 ```
 
 ## Testing

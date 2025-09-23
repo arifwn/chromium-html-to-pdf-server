@@ -38,19 +38,24 @@ class PDFConversionClient:
         response.raise_for_status()
         return response.json()
 
-    def convert_html_to_pdf(self, html: str, options: Optional[Dict[str, Any]] = None, output_file: Optional[str] = None) -> bytes:
+    def convert_html_to_pdf(
+        self, html: str, options: Optional[Dict[str, Any]] = None, creator: Optional[str] = None, output_file: Optional[str] = None
+    ) -> bytes:
         """
         Convert HTML content to PDF.
 
         Args:
             html: HTML content to convert
             options: PDF generation options
+            creator: PDF creator metadata field
             output_file: Optional file path to save the PDF
 
         Returns:
             PDF content as bytes
         """
         payload = {"html": html, "options": options or {}}
+        if creator:
+            payload["creator"] = creator
 
         response = requests.post(f"{self.base_url}/convert", headers=self.headers, json=payload)
         response.raise_for_status()
@@ -64,19 +69,22 @@ class PDFConversionClient:
 
         return pdf_content
 
-    def convert_url_to_pdf(self, url: str, options: Optional[Dict[str, Any]] = None, output_file: Optional[str] = None) -> bytes:
+    def convert_url_to_pdf(self, url: str, options: Optional[Dict[str, Any]] = None, creator: Optional[str] = None, output_file: Optional[str] = None) -> bytes:
         """
         Convert a web page URL to PDF.
 
         Args:
             url: URL to convert
             options: PDF generation options
+            creator: PDF creator metadata field
             output_file: Optional file path to save the PDF
 
         Returns:
             PDF content as bytes
         """
         params = {"url": url, "options": options}
+        if creator:
+            params["creator"] = creator
 
         response = requests.post(f"{self.base_url}/convert-url", headers=self.headers, params=params)
         response.raise_for_status()
@@ -140,7 +148,7 @@ def example_simple_html():
         options = {"format": "A4", "margin": {"top": "2cm", "right": "2cm", "bottom": "2cm", "left": "2cm"}, "print_background": True}
 
         filename = f"simple_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-        client.convert_html_to_pdf(html, options=options, output_file=filename)
+        client.convert_html_to_pdf(html, options=options, creator="PDF Client Example v1.0", output_file=filename)
 
     except Exception as e:
         print(f"Conversion failed: {e}")
@@ -249,7 +257,7 @@ def example_invoice_generation():
         options = {"format": "A4", "margin": {"top": "1cm", "right": "1cm", "bottom": "2cm", "left": "1cm"}}
 
         filename = f"invoice_{invoice_data['invoice_number']}_{datetime.now().strftime('%Y%m%d')}.pdf"
-        client.convert_html_to_pdf(html, options=options, output_file=filename)
+        client.convert_html_to_pdf(html, options=options, creator="Invoice Generator v2.0", output_file=filename)
 
     except Exception as e:
         print(f"Invoice generation failed: {e}")
@@ -268,10 +276,48 @@ def example_url_conversion():
         options = {"format": "A4", "margin": {"top": "1cm", "right": "1cm", "bottom": "1cm", "left": "1cm"}, "print_background": True}
 
         filename = f"website_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-        client.convert_url_to_pdf(url, options=options, output_file=filename)
+        client.convert_url_to_pdf(url, options=options, creator="Website Archiver v1.5", output_file=filename)
 
     except Exception as e:
         print(f"URL conversion failed: {e}")
+
+
+def example_creator_metadata():
+    """Example: Demonstrating creator metadata functionality."""
+    print("\nExample 4: Creator Metadata Demonstration")
+
+    client = PDFConversionClient()
+
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Creator Metadata Demo</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; }
+            .highlight { background-color: #fff3cd; padding: 20px; border-radius: 5px; }
+        </style>
+    </head>
+    <body>
+        <h1>PDF Creator Metadata Demo</h1>
+        <div class="highlight">
+            <p><strong>Note:</strong> This PDF was generated with custom creator metadata.</p>
+            <p>Check the PDF properties to see the custom creator field!</p>
+        </div>
+        <p>Generated at: {{ timestamp }}</p>
+    </body>
+    </html>
+    """.replace("{{ timestamp }}", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+    try:
+        options = {"format": "A4", "margin": {"top": "2cm", "right": "2cm", "bottom": "2cm", "left": "2cm"}}
+
+        filename = f"creator_demo_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        client.convert_html_to_pdf(html, options=options, creator="Custom Creator Application v3.0 - Demo Edition", output_file=filename)
+        print("PDF with custom creator metadata saved! Right-click the file and check 'Properties' or 'Document Info' to see the creator field.")
+
+    except Exception as e:
+        print(f"Creator metadata demo failed: {e}")
 
 
 def main():
@@ -283,8 +329,10 @@ def main():
     example_simple_html()
     example_invoice_generation()
     example_url_conversion()
+    example_creator_metadata()
 
     print("\nAll examples completed! Check the generated PDF files.")
+    print("Tip: To view PDF metadata, right-click on any PDF file and select 'Properties' or 'Document Info'.")
 
 
 if __name__ == "__main__":

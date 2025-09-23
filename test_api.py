@@ -235,6 +235,57 @@ def test_complex_html_conversion():
         return False
 
 
+def test_html_with_creator_metadata():
+    """Test converting HTML to PDF with custom creator metadata."""
+    print("\nTesting HTML conversion with creator metadata...")
+
+    html_content = (
+        """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>PDF with Custom Creator</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; }
+            h1 { color: #333; }
+            p { line-height: 1.6; }
+        </style>
+    </head>
+    <body>
+        <h1>PDF with Custom Creator Field</h1>
+        <p>This PDF should have a custom creator field in its metadata.</p>
+        <p>Generated at: """
+        + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        + """</p>
+    </body>
+    </html>
+    """
+    )
+
+    payload = {
+        "html": html_content,
+        "options": {"format": "A4", "margin": {"top": "2cm", "right": "2cm", "bottom": "2cm", "left": "2cm"}},
+        "creator": "Custom PDF Creator v1.0",
+    }
+
+    try:
+        response = requests.post(f"{BASE_URL}/convert", headers=HEADERS, json=payload)
+
+        if response.status_code == 200:
+            filename = os.path.join(TMP_DIR, f"test_creator_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf")
+            with open(filename, "wb") as f:
+                f.write(response.content)
+            print(f"HTML conversion with creator metadata successful - saved as {filename}")
+            return True
+        else:
+            print(f"HTML conversion with creator metadata failed with status {response.status_code}")
+            print(f"   Response: {response.text}")
+            return False
+    except Exception as e:
+        print(f"HTML conversion with creator metadata error: {e}")
+        return False
+
+
 def test_url_conversion():
     """Test converting a URL to PDF."""
     print("\nTesting URL conversion...")
@@ -258,6 +309,36 @@ def test_url_conversion():
             return False
     except Exception as e:
         print(f"URL conversion error: {e}")
+        return False
+
+
+def test_url_with_creator_metadata():
+    """Test converting a URL to PDF with custom creator metadata."""
+    print("\nTesting URL conversion with creator metadata...")
+
+    test_url = "https://httpbin.org/html"
+
+    payload = {
+        "url": test_url,
+        "options": {"format": "A4", "margin": {"top": "1cm", "right": "1cm", "bottom": "1cm", "left": "1cm"}},
+        "creator": "URL to PDF Converter v2.0",
+    }
+
+    try:
+        response = requests.post(f"{BASE_URL}/convert-url", headers=HEADERS, params=payload)
+
+        if response.status_code == 200:
+            filename = os.path.join(TMP_DIR, f"test_url_creator_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf")
+            with open(filename, "wb") as f:
+                f.write(response.content)
+            print(f"URL conversion with creator metadata successful - saved as {filename}")
+            return True
+        else:
+            print(f"URL conversion with creator metadata failed with status {response.status_code}")
+            print(f"   Response: {response.text}")
+            return False
+    except Exception as e:
+        print(f"URL conversion with creator metadata error: {e}")
         return False
 
 
@@ -289,7 +370,15 @@ def main():
     print("Chromium HTML to PDF Server - API Tests")
     print("=" * 50)
 
-    tests = [test_health_check, test_authentication, test_simple_html_conversion, test_complex_html_conversion, test_url_conversion]
+    tests = [
+        test_health_check,
+        test_authentication,
+        test_simple_html_conversion,
+        test_complex_html_conversion,
+        test_html_with_creator_metadata,
+        test_url_conversion,
+        test_url_with_creator_metadata,
+    ]
 
     passed = 0
     total = len(tests)
