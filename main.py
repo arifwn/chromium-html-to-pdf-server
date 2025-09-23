@@ -29,6 +29,7 @@ class HTMLToPDFRequest(BaseModel):
     options: Optional[dict] = Field(default_factory=dict, description="PDF generation options")
     creator: Optional[str] = Field(None, description="PDF creator metadata field")
     delay: Optional[int] = Field(None, description="Delay in milliseconds before generating PDF (for JS rendering)")
+    media: Optional[str] = Field(None, description="Emulate media type (e.g., 'print' or 'screen')")
 
 
 # PDF options with defaults
@@ -159,6 +160,10 @@ async def convert_html_to_pdf(request: HTMLToPDFRequest, api_key: str = Depends(
                 if request.delay:
                     await page.wait_for_timeout(request.delay)
 
+                # Emulate media type if specified (e.g., 'print' or 'screen')
+                if request.media:
+                    await page.emulate_media(media=request.media)
+
                 # Generate PDF
                 pdf_bytes = await page.pdf(**pdf_options)
 
@@ -184,7 +189,12 @@ async def convert_html_to_pdf(request: HTMLToPDFRequest, api_key: str = Depends(
 
 @app.post("/convert-url", response_class=Response)
 async def convert_url_to_pdf(
-    url: str, options: Optional[dict] = None, creator: Optional[str] = None, delay: Optional[int] = None, api_key: str = Depends(verify_api_key)
+    url: str,
+    options: Optional[dict] = None,
+    creator: Optional[str] = None,
+    delay: Optional[int] = None,
+    media: Optional[str] = None,
+    api_key: str = Depends(verify_api_key),
 ):
     """
     Convert a web page URL to PDF.
@@ -227,6 +237,10 @@ async def convert_url_to_pdf(
                 # Add delay if specified to allow JavaScript execution
                 if delay:
                     await page.wait_for_timeout(delay)
+
+                # Emulate media type if specified (e.g., 'print' or 'screen')
+                if media:
+                    await page.emulate_media(media=media)
 
                 # Generate PDF
                 pdf_bytes = await page.pdf(**pdf_options)

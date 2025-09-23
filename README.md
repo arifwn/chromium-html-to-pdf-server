@@ -146,6 +146,7 @@ Authorization: Bearer your-api-key
 - `url` (string): URL to convert
 - `options` (object, optional): PDF generation options
 - `creator` (string, optional): PDF creator metadata field
+- `media` (string, optional): Media type for rendering (e.g., "screen", "print")
 
 **Response:** PDF file (application/pdf)
 
@@ -155,8 +156,7 @@ Authorization: Bearer your-api-key
 |--------|------|---------|-------------|
 | `format` | string | "A4" | Paper format (A4, A3, A5, Letter, etc.) |
 | `margin` | object | `{"top": "1cm", "right": "1cm", "bottom": "1cm", "left": "1cm"}` | Page margins |
-| `print_background` | boolean | `true` | Include background graphics |
-| `prefer_css_page_size` | boolean | `false` | Use CSS page size |
+| landscape | boolean | `false` | Landscape orientation |
 
 ### PDF Metadata Options
 
@@ -232,7 +232,7 @@ const convertHtmlToPdf = async (html, options = {}, creator = null) => {
   try {
     const payload = { html: html, options: options };
     if (creator) payload.creator = creator;
-    
+
     const response = await axios.post('http://localhost:8822/convert', payload, {
       headers: {
         'Authorization': 'Bearer your-secret-api-key',
