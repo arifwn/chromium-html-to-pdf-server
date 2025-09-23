@@ -39,7 +39,13 @@ class PDFConversionClient:
         return response.json()
 
     def convert_html_to_pdf(
-        self, html: str, options: Optional[Dict[str, Any]] = None, creator: Optional[str] = None, output_file: Optional[str] = None
+        self,
+        html: str,
+        options: Optional[Dict[str, Any]] = None,
+        creator: Optional[str] = None,
+        delay: Optional[float] = None,
+        media: Optional[str] = None,
+        output_file: Optional[str] = None,
     ) -> bytes:
         """
         Convert HTML content to PDF.
@@ -48,6 +54,8 @@ class PDFConversionClient:
             html: HTML content to convert
             options: PDF generation options
             creator: PDF creator metadata field
+            delay: Optional delay in seconds before capturing PDF
+            media: Optional media type ('screen' or 'print')
             output_file: Optional file path to save the PDF
 
         Returns:
@@ -56,6 +64,10 @@ class PDFConversionClient:
         payload = {"html": html, "options": options or {}}
         if creator:
             payload["creator"] = creator
+        if delay is not None:
+            payload["delay"] = delay
+        if media:
+            payload["media"] = media
 
         response = requests.post(f"{self.base_url}/convert", headers=self.headers, json=payload)
         response.raise_for_status()
@@ -69,7 +81,15 @@ class PDFConversionClient:
 
         return pdf_content
 
-    def convert_url_to_pdf(self, url: str, options: Optional[Dict[str, Any]] = None, creator: Optional[str] = None, output_file: Optional[str] = None) -> bytes:
+    def convert_url_to_pdf(
+        self,
+        url: str,
+        options: Optional[Dict[str, Any]] = None,
+        creator: Optional[str] = None,
+        delay: Optional[float] = None,
+        media: Optional[str] = None,
+        output_file: Optional[str] = None,
+    ) -> bytes:
         """
         Convert a web page URL to PDF.
 
@@ -77,6 +97,8 @@ class PDFConversionClient:
             url: URL to convert
             options: PDF generation options
             creator: PDF creator metadata field
+            delay: Optional delay in seconds before capturing PDF
+            media: Optional media type ('screen' or 'print')
             output_file: Optional file path to save the PDF
 
         Returns:
@@ -85,6 +107,10 @@ class PDFConversionClient:
         params = {"url": url, "options": options}
         if creator:
             params["creator"] = creator
+        if delay is not None:
+            params["delay"] = delay
+        if media:
+            params["media"] = media
 
         response = requests.post(f"{self.base_url}/convert-url", headers=self.headers, params=params)
         response.raise_for_status()
@@ -148,7 +174,7 @@ def example_simple_html():
         options = {"format": "A4", "margin": {"top": "2cm", "right": "2cm", "bottom": "2cm", "left": "2cm"}, "print_background": True}
 
         filename = f"simple_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-        client.convert_html_to_pdf(html, options=options, creator="PDF Client Example v1.0", output_file=filename)
+        client.convert_html_to_pdf(html, options=options, creator="PDF Client Example v1.0", delay=1.0, media="print", output_file=filename)
 
     except Exception as e:
         print(f"Conversion failed: {e}")
@@ -257,7 +283,7 @@ def example_invoice_generation():
         options = {"format": "A4", "margin": {"top": "1cm", "right": "1cm", "bottom": "2cm", "left": "1cm"}}
 
         filename = f"invoice_{invoice_data['invoice_number']}_{datetime.now().strftime('%Y%m%d')}.pdf"
-        client.convert_html_to_pdf(html, options=options, creator="Invoice Generator v2.0", output_file=filename)
+        client.convert_html_to_pdf(html, options=options, creator="Invoice Generator v2.0", delay=0.5, media="print", output_file=filename)
 
     except Exception as e:
         print(f"Invoice generation failed: {e}")
@@ -276,7 +302,7 @@ def example_url_conversion():
         options = {"format": "A4", "margin": {"top": "1cm", "right": "1cm", "bottom": "1cm", "left": "1cm"}, "print_background": True}
 
         filename = f"website_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-        client.convert_url_to_pdf(url, options=options, creator="Website Archiver v1.5", output_file=filename)
+        client.convert_url_to_pdf(url, options=options, creator="Website Archiver v1.5", delay=2.0, media="screen", output_file=filename)
 
     except Exception as e:
         print(f"URL conversion failed: {e}")
@@ -313,11 +339,95 @@ def example_creator_metadata():
         options = {"format": "A4", "margin": {"top": "2cm", "right": "2cm", "bottom": "2cm", "left": "2cm"}}
 
         filename = f"creator_demo_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-        client.convert_html_to_pdf(html, options=options, creator="Custom Creator Application v3.0 - Demo Edition", output_file=filename)
+        client.convert_html_to_pdf(
+            html, options=options, creator="Custom Creator Application v3.0 - Demo Edition", delay=1.5, media="print", output_file=filename
+        )
         print("PDF with custom creator metadata saved! Right-click the file and check 'Properties' or 'Document Info' to see the creator field.")
 
     except Exception as e:
         print(f"Creator metadata demo failed: {e}")
+
+
+def example_delay_and_media():
+    """Example: Demonstrating delay and media parameters."""
+    print("\nExample 5: Delay and Media Parameters Demonstration")
+
+    client = PDFConversionClient()
+
+    # HTML with dynamic content that might need time to load
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Delay and Media Demo</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; }
+            .loading { color: #e74c3c; }
+            .loaded { color: #27ae60; display: none; }
+            @media screen {
+                .screen-only { display: block; color: #3498db; }
+                .print-only { display: none; }
+            }
+            @media print {
+                .screen-only { display: none; }
+                .print-only { display: block; color: #2c3e50; }
+            }
+        </style>
+        <script>
+            setTimeout(function() {
+                document.querySelector('.loading').style.display = 'none';
+                document.querySelector('.loaded').style.display = 'block';
+            }, 1000);
+        </script>
+    </head>
+    <body>
+        <h1>Delay and Media Parameters Demo</h1>
+
+        <div class="loading">⏳ Loading dynamic content...</div>
+        <div class="loaded">✅ Dynamic content loaded successfully!</div>
+
+        <div class="screen-only">
+            <h2>Screen Media</h2>
+            <p>This content is only visible when media='screen' is used.</p>
+            <p>Perfect for capturing web pages as they appear in browsers.</p>
+        </div>
+
+        <div class="print-only">
+            <h2>Print Media</h2>
+            <p>This content is only visible when media='print' is used.</p>
+            <p>Ideal for generating print-optimized documents.</p>
+        </div>
+
+        <h2>Delay Parameter Benefits</h2>
+        <ul>
+            <li>Allows JavaScript to execute and modify content</li>
+            <li>Ensures images and fonts are fully loaded</li>
+            <li>Gives time for CSS animations to complete</li>
+            <li>Waits for AJAX requests to finish</li>
+        </ul>
+    </body>
+    </html>
+    """
+
+    try:
+        # Example 1: Screen media with delay
+        print("  - Generating PDF with screen media and 2-second delay...")
+        options = {"format": "A4", "margin": {"top": "2cm", "right": "2cm", "bottom": "2cm", "left": "2cm"}}
+        filename_screen = f"delay_media_screen_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        client.convert_html_to_pdf(html, options=options, creator="Delay Demo - Screen Media", delay=2.0, media="screen", output_file=filename_screen)
+
+        # Example 2: Print media with delay
+        print("  - Generating PDF with print media and 2-second delay...")
+        filename_print = f"delay_media_print_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        client.convert_html_to_pdf(html, options=options, creator="Delay Demo - Print Media", delay=2.0, media="print", output_file=filename_print)
+
+        print("  ✅ Generated two PDFs demonstrating different media types:")
+        print(f"     - {filename_screen} (screen media)")
+        print(f"     - {filename_print} (print media)")
+        print("  📝 Compare the files to see the difference between screen and print media!")
+
+    except Exception as e:
+        print(f"Delay and media demo failed: {e}")
 
 
 def main():
@@ -330,6 +440,7 @@ def main():
     example_invoice_generation()
     example_url_conversion()
     example_creator_metadata()
+    example_delay_and_media()
 
     print("\nAll examples completed! Check the generated PDF files.")
     print("Tip: To view PDF metadata, right-click on any PDF file and select 'Properties' or 'Document Info'.")
