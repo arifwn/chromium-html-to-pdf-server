@@ -127,8 +127,7 @@ Authorization: Bearer your-api-key
       "right": "1cm",
       "bottom": "1cm",
       "left": "1cm"
-    },
-    "print_background": true
+    }
   },
   "creator": "My Application v1.0"
 }
@@ -291,9 +290,7 @@ The server uses these default PDF options (can be overridden per request):
         "right": "1cm",
         "bottom": "1cm",
         "left": "1cm"
-    },
-    "print_background": True,
-    "prefer_css_page_size": False
+    }
 }
 ```
 
