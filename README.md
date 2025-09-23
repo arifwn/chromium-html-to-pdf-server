@@ -146,6 +146,7 @@ Authorization: Bearer your-api-key
 - `url` (string): URL to convert
 - `options` (object, optional): PDF generation options
 - `creator` (string, optional): PDF creator metadata field
+- `delay` (integer, optional): Delay in milliseconds to wait after page load before rendering
 - `media` (string, optional): Media type for rendering (e.g., "screen", "print")
 
 **Response:** PDF file (application/pdf)
