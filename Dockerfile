@@ -1,36 +1,19 @@
-FROM python:3.11-slim
+FROM mcr.microsoft.com/playwright/python:v1.54.0-noble
 
 # Set working directory
 WORKDIR /app
-
-# Install system dependencies required for Playwright
-RUN sed -i -e's/ main/ main contrib non-free/g' /etc/apt/sources.list.d/debian.sources && \
-    apt-get update && apt-get install -y \
-    wget \
-    gnupg \
-    ca-certificates \
-    fonts-liberation \
-    fonts-ubuntu \
-    fonts-unifont \
-    fonts-noto \
-    && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
 COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Install Playwright browsers
 RUN playwright install chromium
-RUN playwright install-deps chromium --dry-run
 
 # Copy application code
 COPY . .
 
-# Create non-root user for security
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-USER appuser
+USER pwuser
 
 # Expose port
 EXPOSE 8822
