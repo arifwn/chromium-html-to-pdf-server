@@ -28,6 +28,7 @@ class HTMLToPDFRequest(BaseModel):
     html: str = Field(..., description="HTML content to convert to PDF")
     options: Optional[dict] = Field(default_factory=dict, description="PDF generation options")
     creator: Optional[str] = Field(None, description="PDF creator metadata field")
+    delay: Optional[int] = Field(None, description="Delay in milliseconds before generating PDF (for JS rendering)")
 
 
 # PDF options with defaults
@@ -154,6 +155,10 @@ async def convert_html_to_pdf(request: HTMLToPDFRequest, api_key: str = Depends(
                 # Set content and wait for load
                 await page.set_content(request.html, wait_until="networkidle")
 
+                # Add delay if specified to allow JavaScript execution
+                if request.delay:
+                    await page.wait_for_timeout(request.delay)
+
                 # Generate PDF
                 pdf_bytes = await page.pdf(**pdf_options)
 
@@ -178,7 +183,9 @@ async def convert_html_to_pdf(request: HTMLToPDFRequest, api_key: str = Depends(
 
 
 @app.post("/convert-url", response_class=Response)
-async def convert_url_to_pdf(url: str, options: Optional[dict] = None, creator: Optional[str] = None, api_key: str = Depends(verify_api_key)):
+async def convert_url_to_pdf(
+    url: str, options: Optional[dict] = None, creator: Optional[str] = None, delay: Optional[int] = None, api_key: str = Depends(verify_api_key)
+):
     """
     Convert a web page URL to PDF.
 
@@ -186,6 +193,7 @@ async def convert_url_to_pdf(url: str, options: Optional[dict] = None, creator: 
         url: URL of the web page to convert
         options: PDF generation options
         creator: PDF creator metadata field
+        delay: Delay in milliseconds before generating PDF (for JS rendering)
         api_key: API key for authentication
 
     Returns:
@@ -215,6 +223,10 @@ async def convert_url_to_pdf(url: str, options: Optional[dict] = None, creator: 
 
                 # Navigate to URL and wait for load
                 await page.goto(url, wait_until="networkidle", timeout=30000)
+
+                # Add delay if specified to allow JavaScript execution
+                if delay:
+                    await page.wait_for_timeout(delay)
 
                 # Generate PDF
                 pdf_bytes = await page.pdf(**pdf_options)
