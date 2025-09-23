@@ -191,3 +191,4 @@ logs/
 *.log
 
 tmp
+build-and-push-image.sh
