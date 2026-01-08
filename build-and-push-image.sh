@@ -7,6 +7,7 @@ docker buildx build -t arifwn/chromium-html-to-pdf-server:1.0.0 .
 docker buildx build -t arifwn/chromium-html-to-pdf-server:latest .
 
 echo "pushing image..."
-docker push arifwn/chromium-html-to-pdf-server
+docker push arifwn/chromium-html-to-pdf-server:1.0.0
+docker push arifwn/chromium-html-to-pdf-server:latest
 
 echo "done!"
