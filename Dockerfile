@@ -1,4 +1,8 @@
-FROM mcr.microsoft.com/playwright/python:v1.54.0-noble
+# Keep this tag equal to the playwright pin in requirements.txt, otherwise
+# `playwright install chromium` below downloads a different browser build.
+# Must stay at 1.64.1 or newer: older bundled Chromium carries a Brotli decoder
+# vulnerable to CVE-2026-111497 (reachable via br responses and WOFF2 fonts).
+FROM mcr.microsoft.com/playwright/python:v1.64.1-noble
 
 # Set working directory
 WORKDIR /app

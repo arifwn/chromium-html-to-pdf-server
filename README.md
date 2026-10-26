@@ -336,6 +336,7 @@ Set up monitoring tools to check this endpoint regularly.
 3. **Rate Limiting**: Implement rate limiting to prevent abuse
 4. **Input Validation**: Be cautious with untrusted HTML content
 5. **Resource Limits**: Set appropriate memory and timeout limits
+6. **Keep Playwright current**: Playwright 1.64.1 or newer is required. Older bundled Chromium builds carry a Brotli decoder vulnerable to CVE-2026-111497, reachable through `br`-encoded responses and WOFF2 fonts in rendered pages
 
 ## Troubleshooting
 
